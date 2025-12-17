@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新加坡进口关税计算器 (2025版)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        h2 { color: #2c3e50; text-align: center; margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        .btn { background: #27ae60; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-size: 18px; margin-top: 10px; transition: 0.3s; }
+        .btn:hover { background: #219150; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 6px; display: none; }
+        .result.show { display: block; background: #e8f6f3; border-left: 5px solid #27ae60; }
+        .note { font-size: 12px; color: #7f8c8d; margin-top: 20px; line-height: 1.6; border-top: 1px solid #eee; padding-top: 10px; }
+        .highlight { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🇸🇬 新加坡关税计算器</h2>
+    
+    <div class="form-group">
+        <label>目的地</label>
+        <input type="text" value="新加坡 (Singapore)" disabled>
+    </div>
+
+    <div class="form-group">
+        <label>起始地</label>
+        <select id="origin">
+            <option value="CN">中国 (China)</option>
+            <option value="US">美国 (USA)</option>
+            <option value="UK">英国 (UK)</option>
+            <option value="MY">马来西亚 (Malaysia)</option>
+            <option value="JP">日本 (Japan)</option>
+            <option value="OTHER">其他国家/地区</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>商品类目</label>
+        <select id="category" onchange="toggleSpecifics()">
+            <option value="general">普通商品 (服装/电子产品/日用品等)</option>
+            <option value="alcohol">酒精饮料 (含关税)</option>
+            <option value="tobacco">烟草制品 (高额消费税)</option>
+            <option value="motor">机动车辆 (20% 消费税)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>申报价值 (CIF - 货值+运费+保险) [SGD]</label>
+        <input type="number" id="cifValue" placeholder="请输入金额" min="0">
+    </div>
+
+    <button class="btn" onclick="calculate()">开始计算</button>
+
+    <div id="resultBox" class="result">
+        <p>预估应交关税: <span id="dutyResult" class="highlight">0.00</span> SGD</p>
+        <p>预估应交消费税 (GST 9%): <span id="gstResult" class="highlight">0.00</span> SGD</p>
+        <hr>
+        <p><strong>总计预估缴纳: <span id="totalResult" class="highlight">0.00</span> SGD</strong></p>
+    </div>
+
+    <div class="note">
+        <strong>必要说明：</strong>
+        <ul>
+            <li><strong>GST 税率：</strong> 2025年最新税率为 <span class="highlight">9%</span>。</li>
+            <li><strong>免征额：</strong> 邮寄/空运进口价值 <strong>≤400 SGD</strong> 的普通商品免征 GST。</li>
+            <li><strong>计算依据：</strong> 消费税是基于 (CIF价值 + 关税) 的总和计算。</li>
+            <li><strong>特别声明：</strong> 本工具仅供参考。酒类和烟草涉及复杂的“每升/每支”计费标准，实际费用以新加坡海关 (Singapore Customs) 最终账单为准。</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    function calculate() {
+        const cif = parseFloat(document.getElementById('cifValue').value);
+        const category = document.getElementById('category').value;
+        const gstRate = 0.09;
+        
+        if (isNaN(cif) || cif <= 0) {
+            alert("请输入有效的金额");
+            return;
+        }
+
+        let duty = 0;
+        let gst = 0;
+
+        // 简化的逻辑判断
+        if (category === 'general') {
+            // 普通商品，如果低于400 SGD免征GST
+            duty = 0;
+            gst = (cif > 400) ? (cif * gstRate) : 0;
+        } else if (category === 'alcohol') {
+            // 假设平均关税率为10%（实际酒精是按升计费，此处为演示简化）
+            duty = cif * 0.10; 
+            gst = (cif + duty) * gstRate;
+        } else if (category === 'motor') {
+            // 汽车通常有20%的额外消费税(Excise Duty)
+            duty = cif * 0.20;
+            gst = (cif + duty) * gstRate;
+        } else if (category === 'tobacco') {
+            // 烟草税率极高
+            duty = cif * 0.60;
+            gst = (cif + duty) * gstRate;
+        }
+
+        document.getElementById('dutyResult').innerText = duty.toFixed(2);
+        document.getElementById('gstResult').innerText = gst.toFixed(2);
+        document.getElementById('totalResult').innerText = (duty + gst).toFixed(2);
+        document.getElementById('resultBox').className = "result show";
+    }
+
+    function toggleSpecifics() {
+        // 后续可根据类目增加更详细的单位输入（如升、支数）
+    }
+</script>
+
+</body>
+</html>
